@@ -1,22 +1,15 @@
-
 import { useState } from "react";
 import UploadZone from "@/components/UploadZone";
 import ScanResults from "@/components/ScanResults";
 import { FileText, CheckCircle, Zap, Target, Star, ArrowRight, Users, BarChart, Layout, Book } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [showResults, setShowResults] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("home");
-
-  const handleScanStart = async (file: File) => {
-    // Here we'll add the actual scanning logic once Supabase is connected
-    // For now, we'll just show the results after a delay to simulate processing
-    setTimeout(() => {
-      setShowResults(true);
-    }, 2000);
-  };
+  const navigate = useNavigate();
 
   const features = [
     {
@@ -79,25 +72,33 @@ const Index = () => {
               ATS Guru
             </span>
             <div className="hidden md:flex space-x-6">
-              {["Features", "How It Works", "Pricing", "Contact"].map((item) => (
+              {[
+                { name: "Features", path: "#features" },
+                { name: "How It Works", path: "#how-it-works" },
+                { name: "Pricing", path: "#pricing" },
+                { name: "Contact", path: "/contact" }
+              ].map((item) => (
                 <Button
-                  key={item}
+                  key={item.name}
                   variant="ghost"
                   className="hover:bg-primary/10 hover:text-primary transition-colors"
-                  onClick={() => setActiveSection(item.toLowerCase())}
+                  onClick={() => item.path.startsWith('#') ? setActiveSection(item.name.toLowerCase()) : navigate(item.path)}
                 >
-                  {item}
+                  {item.name}
                 </Button>
               ))}
             </div>
           </div>
-          <Button className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90">
+          <Button 
+            className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+            onClick={() => navigate('/upload')}
+          >
             Get Started
           </Button>
         </div>
       </nav>
 
-      {/* Hero Section with Enhanced Animation */}
+      {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/5 via-purple-500/5 to-transparent border-b">
         <div className="container py-20 md:py-32">
           <div className="text-center space-y-8 animate-fade-up">
@@ -111,7 +112,11 @@ const Index = () => {
               Don't let your perfect resume get lost in the ATS void. Get instant feedback and improve your chances of landing that dream job.
             </p>
             <div className="flex justify-center gap-4 animate-fade-up" style={{ animationDelay: "400ms" }}>
-              <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+                onClick={() => navigate('/upload')}
+              >
                 Start Scanning <ArrowRight className="ml-2" />
               </Button>
               <Button size="lg" variant="outline">
@@ -216,7 +221,7 @@ const Index = () => {
               Upload your resume and let our AI-powered ATS scanner do the magic
             </p>
           </div>
-          <UploadZone onScanStart={handleScanStart} />
+          <UploadZone onScanStart={() => setShowResults(true)} />
         </div>
 
         {/* Results Section */}
