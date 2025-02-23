@@ -2,11 +2,13 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, CheckCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const UploadZone = () => {
+const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -39,6 +41,22 @@ const UploadZone = () => {
     }
   }, [toast]);
 
+  const handleScan = async () => {
+    if (!file) return;
+    
+    setIsLoading(true);
+    try {
+      onScanStart(file);
+    } catch (error) {
+      toast({
+        title: "Error scanning resume",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
+  };
+
   return (
     <Card
       className={`relative p-8 transition-all duration-300 ease-in-out border-2 border-dashed rounded-xl 
@@ -62,15 +80,31 @@ const UploadZone = () => {
             </div>
           </>
         ) : (
-          <div className="flex items-center space-x-4">
-            <FileText className="w-8 h-8 text-primary" />
-            <div className="text-left">
-              <p className="font-medium">{file.name}</p>
-              <p className="text-sm text-muted-foreground">
-                Ready for ATS analysis
-              </p>
+          <div className="space-y-4 w-full">
+            <div className="flex items-center space-x-4">
+              <FileText className="w-8 h-8 text-primary" />
+              <div className="text-left flex-1">
+                <p className="font-medium">{file.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  Ready for ATS analysis
+                </p>
+              </div>
+              <CheckCircle className="w-5 h-5 text-green-500" />
             </div>
-            <CheckCircle className="w-5 h-5 text-green-500" />
+            <Button
+              className="w-full"
+              onClick={handleScan}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Scanning...
+                </>
+              ) : (
+                "Start ATS Scan"
+              )}
+            </Button>
           </div>
         )}
       </div>

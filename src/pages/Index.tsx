@@ -6,6 +6,14 @@ import ScanResults from "@/components/ScanResults";
 const Index = () => {
   const [showResults, setShowResults] = useState(false);
 
+  const handleScanStart = async (file: File) => {
+    // Here we'll add the actual scanning logic once Supabase is connected
+    // For now, we'll just show the results after a delay to simulate processing
+    setTimeout(() => {
+      setShowResults(true);
+    }, 2000);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container py-12 space-y-12">
@@ -22,7 +30,7 @@ const Index = () => {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <UploadZone />
+          <UploadZone onScanStart={handleScanStart} />
         </div>
 
         {showResults && (
