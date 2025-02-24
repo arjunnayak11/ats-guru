@@ -1,6 +1,5 @@
+
 import { useState } from "react";
-import UploadZone from "@/components/UploadZone";
-import ScanResults from "@/components/ScanResults";
 import { FileText, CheckCircle, Zap, Target, Star, ArrowRight, Users, BarChart, Layout, Book } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -213,48 +212,49 @@ const Index = () => {
           </div>
         </div>
 
-      {/* Enhanced Footer */}
-      <footer className="border-t bg-muted/50 mt-24">
-        <div className="container py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <h4 className="font-semibold">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Features</li>
-                <li>Pricing</li>
-                <li>FAQ</li>
-              </ul>
+        {/* Enhanced Footer */}
+        <footer className="border-t bg-muted/50 mt-24">
+          <div className="container py-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="space-y-4">
+                <h4 className="font-semibold">Product</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>Features</li>
+                  <li>Pricing</li>
+                  <li>FAQ</li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold">Company</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>About</li>
+                  <li>Careers</li>
+                  <li>Blog</li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold">Resources</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>Documentation</li>
+                  <li>Guides</li>
+                  <li>Support</li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold">Legal</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>Privacy</li>
+                  <li>Terms</li>
+                  <li>Security</li>
+                </ul>
+              </div>
             </div>
-            <div className="space-y-4">
-              <h4 className="font-semibold">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>About</li>
-                <li>Careers</li>
-                <li>Blog</li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="font-semibold">Resources</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Documentation</li>
-                <li>Guides</li>
-                <li>Support</li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="font-semibold">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Privacy</li>
-                <li>Terms</li>
-                <li>Security</li>
-              </ul>
+            <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+              <p>Helping job seekers optimize their resumes for ATS systems</p>
             </div>
           </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>Helping job seekers optimize their resumes for ATS systems</p>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 };
