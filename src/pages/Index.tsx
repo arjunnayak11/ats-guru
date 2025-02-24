@@ -213,25 +213,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Upload Section with Enhanced UI */}
-        <div className="max-w-2xl mx-auto space-y-12">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold">Ready to Optimize?</h2>
-            <p className="text-muted-foreground">
-              Upload your resume and let our AI-powered ATS scanner do the magic
-            </p>
-          </div>
-          <UploadZone onScanStart={() => setShowResults(true)} />
-        </div>
-
-        {/* Results Section */}
-        {showResults && (
-          <div className="max-w-2xl mx-auto mt-12 animate-fade-up">
-            <ScanResults />
-          </div>
-        )}
-      </div>
-
       {/* Enhanced Footer */}
       <footer className="border-t bg-muted/50 mt-24">
         <div className="container py-12">
