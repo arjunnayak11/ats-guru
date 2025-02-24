@@ -73,7 +73,7 @@ const Index = () => {
             <div className="hidden md:flex space-x-6">
               {[
                 { name: "Features", path: "#features" },
-                { name: "How It Works", path: "#how-it-works" },
+                { name: "How It Works", path: "/HIW" },
                 { name: "Pricing", path: "/pricing" },
                 { name: "Contact", path: "/contact" }
               ].map((item) => (

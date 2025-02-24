@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Upload from "./pages/Upload";
 import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
+import HIW from "./pages/HIW";
 import NotFound from "./pages/NotFound";
 
 // Create a client
@@ -31,6 +32,7 @@ function App() {
               <Route path="/upload" element={<Upload />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/HIW" element={<HIW />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
