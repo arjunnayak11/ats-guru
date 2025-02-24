@@ -1,14 +1,21 @@
-
 import { useState } from "react";
-import { FileText, CheckCircle, Zap, Target, Star, ArrowRight, Users, BarChart, Layout, Book } from "lucide-react";
+import { FileText, CheckCircle, Zap, Target, Star, ArrowRight, Users, BarChart, Layout, Book, Menu } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [showResults, setShowResults] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("home");
   const navigate = useNavigate();
+
+  const navigationItems = [
+    { name: "Features", path: "#features" },
+    { name: "How It Works", path: "/HIW" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "Contact", path: "/contact" }
+  ];
 
   const features = [
     {
@@ -32,6 +39,14 @@ const Index = () => {
       description: "Compare your resume against specific job descriptions"
     }
   ];
+
+  const handleNavigation = (path: string) => {
+    if (path.startsWith('#')) {
+      setActiveSection(path.substring(1));
+    } else {
+      navigate(path);
+    }
+  };
 
   const testimonials = [
     {
@@ -70,26 +85,57 @@ const Index = () => {
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               ATS Guru
             </span>
+            {/* Desktop Navigation */}
             <div className="hidden md:flex space-x-6">
-              {[
-                { name: "Features", path: "#features" },
-                { name: "How It Works", path: "/HIW" },
-                { name: "Pricing", path: "/pricing" },
-                { name: "Contact", path: "/contact" }
-              ].map((item) => (
+              {navigationItems.map((item) => (
                 <Button
                   key={item.name}
                   variant="ghost"
                   className="hover:bg-primary/10 hover:text-primary transition-colors"
-                  onClick={() => item.path.startsWith('#') ? setActiveSection(item.name.toLowerCase()) : navigate(item.path)}
+                  onClick={() => handleNavigation(item.path)}
                 >
                   {item.name}
                 </Button>
               ))}
             </div>
           </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px]">
+                <div className="flex flex-col space-y-4 mt-8">
+                  {navigationItems.map((item) => (
+                    <Button
+                      key={item.name}
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleNavigation(item.path);
+                      }}
+                    >
+                      {item.name}
+                    </Button>
+                  ))}
+                  <Button 
+                    className="w-full bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+                    onClick={() => navigate('/upload')}
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Desktop CTA Button */}
           <Button 
-            className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+            className="hidden md:flex bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
             onClick={() => navigate('/upload')}
           >
             Get Started
