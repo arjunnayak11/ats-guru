@@ -1,5 +1,5 @@
 
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Brain, Target, Zap, ArrowRight, Users } from "lucide-react";
 
