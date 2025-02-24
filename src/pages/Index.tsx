@@ -74,7 +74,7 @@ const Index = () => {
               {[
                 { name: "Features", path: "#features" },
                 { name: "How It Works", path: "#how-it-works" },
-                { name: "Pricing", path: "#pricing" },
+                { name: "Pricing", path: "/pricing" },
                 { name: "Contact", path: "/contact" }
               ].map((item) => (
                 <Button
