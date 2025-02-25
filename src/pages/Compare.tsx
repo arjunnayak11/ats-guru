@@ -7,6 +7,7 @@ import { Target, ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UploadZone from "@/components/UploadZone";
 import MatchResults from "@/components/MatchResults";
+import { compareDocuments } from "@/functions/compare-documents";
 
 interface Analysis {
   overallMatch: number;
@@ -45,22 +46,7 @@ const Compare = () => {
 
     setIsAnalyzing(true);
     try {
-      const response = await fetch('/functions/compare-documents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          resumeText,
-          jobDescription,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze documents');
-      }
-
-      const analysisResult = await response.json();
+      const analysisResult = await compareDocuments(resumeText, jobDescription);
       setAnalysis(analysisResult);
       
       toast({
