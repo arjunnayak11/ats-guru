@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react";
@@ -10,6 +10,7 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -21,13 +22,9 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
-      setFile(droppedFile);
+  const validateAndSetFile = (file: File) => {
+    if (file && file.type === "application/pdf") {
+      setFile(file);
       toast({
         title: "File uploaded successfully",
         description: "Your resume is ready for ATS scanning.",
@@ -39,7 +36,25 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer.files[0];
+    validateAndSetFile(droppedFile);
   }, [toast]);
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      validateAndSetFile(selectedFile);
+    }
+  };
+
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleScan = async () => {
     if (!file) return;
@@ -66,6 +81,13 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileInput}
+        accept=".pdf"
+        className="hidden"
+      />
       <div className="flex flex-col items-center justify-center space-y-4 text-center animate-fade-up">
         {!file ? (
           <>
@@ -73,10 +95,17 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
               <Upload className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">Drop your resume here</h3>
+              <h3 className="text-lg font-semibold">Upload your resume</h3>
               <p className="text-sm text-muted-foreground">
-                Upload your PDF resume to check ATS compatibility
+                Drag & drop your PDF resume or
               </p>
+              <Button
+                variant="link"
+                className="text-primary mt-1"
+                onClick={handleBrowseClick}
+              >
+                browse from your computer
+              </Button>
             </div>
           </>
         ) : (
