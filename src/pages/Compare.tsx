@@ -4,19 +4,78 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { Target, ArrowLeft, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import UploadZone from "@/components/UploadZone";
+import MatchResults from "@/components/MatchResults";
+
+interface Analysis {
+  overallMatch: number;
+  skillsMatch: number;
+  experienceMatch: number;
+  educationMatch: number;
+  missingSkills: string[];
+  suggestions: string[];
+}
 
 const Compare = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [resumeText, setResumeText] = useState<string>("");
 
   const handleScanStart = async (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setResumeText(e.target?.result as string);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleAnalyze = async () => {
+    if (!resumeText || !jobDescription) {
+      toast({
+        title: "Missing information",
+        description: "Please upload a resume and paste the job description.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
-    // TODO: Implement comparison logic
-    setTimeout(() => {
+    try {
+      const response = await fetch('/functions/compare-documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          resumeText,
+          jobDescription,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze documents');
+      }
+
+      const analysisResult = await response.json();
+      setAnalysis(analysisResult);
+      
+      toast({
+        title: "Analysis complete",
+        description: "We've analyzed your resume against the job description.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error analyzing documents",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -56,7 +115,8 @@ const Compare = () => {
           <Button 
             size="lg"
             className="w-full"
-            disabled={!jobDescription || isAnalyzing}
+            onClick={handleAnalyze}
+            disabled={!jobDescription || !resumeText || isAnalyzing}
           >
             {isAnalyzing ? (
               <>
@@ -71,6 +131,8 @@ const Compare = () => {
             )}
           </Button>
         </div>
+
+        {analysis && <MatchResults analysis={analysis} />}
       </div>
     </div>
   );
