@@ -27,11 +27,29 @@ const Compare = () => {
   const [resumeText, setResumeText] = useState<string>("");
 
   const handleScanStart = async (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setResumeText(e.target?.result as string);
-    };
-    reader.readAsText(file);
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setResumeText(e.target.result as string);
+        }
+      };
+      reader.onerror = () => {
+        toast({
+          title: "Error reading file",
+          description: "Please try uploading the file again.",
+          variant: "destructive",
+        });
+      };
+      reader.readAsText(file);
+    } catch (error) {
+      console.error('Error reading file:', error);
+      toast({
+        title: "Error reading file",
+        description: "Please try uploading the file again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAnalyze = async () => {
@@ -54,6 +72,7 @@ const Compare = () => {
         description: "We've analyzed your resume against the job description.",
       });
     } catch (error) {
+      console.error('Analysis error:', error);
       toast({
         title: "Error analyzing documents",
         description: "Please try again later.",

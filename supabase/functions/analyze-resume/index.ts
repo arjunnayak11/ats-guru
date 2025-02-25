@@ -8,6 +8,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function cleanPDFText(text: string): string {
+  // Remove PDF specific markers and clean up the text
+  return text
+    .replace(/%PDF-.*?(?=\w)/gs, '') // Remove PDF header
+    .replace(/endobj|endstream|obj|\d+ \d+ obj|stream/g, '') // Remove PDF objects
+    .replace(/\[\d+ \d+ \d+ \d+\]/g, '') // Remove PDF coordinates
+    .replace(/<<.*?>>/g, '') // Remove PDF dictionaries
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -16,7 +27,20 @@ serve(async (req) => {
 
   try {
     const { resumeText, jobDescription } = await req.json()
+    
+    console.log('Processing resume text and job description...');
+    
+    // Clean the resume text if it contains PDF markers
+    const cleanedResumeText = resumeText.startsWith('%PDF') ? 
+      cleanPDFText(resumeText) : 
+      resumeText;
 
+    // Validate input
+    if (!cleanedResumeText || !jobDescription) {
+      throw new Error('Missing required input: resume text or job description');
+    }
+
+    console.log('Making request to OpenAI...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -39,7 +63,7 @@ serve(async (req) => {
               4. Specific suggestions for improvement
 
               Resume:
-              ${resumeText}
+              ${cleanedResumeText}
 
               Job Description:
               ${jobDescription}
@@ -58,13 +82,22 @@ serve(async (req) => {
       }),
     })
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
+      throw new Error('OpenAI API request failed');
+    }
+
     const data = await response.json()
+    console.log('Successfully received OpenAI response');
+    
+    const parsedContent = JSON.parse(data.choices[0].message.content);
     return new Response(
-      JSON.stringify(JSON.parse(data.choices[0].message.content)),
+      JSON.stringify(parsedContent),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in analyze-resume function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
