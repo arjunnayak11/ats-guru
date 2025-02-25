@@ -10,6 +10,7 @@ import Upload from "./pages/Upload";
 import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
 import HIW from "./pages/HIW";
+import Compare from "./pages/Compare";
 import NotFound from "./pages/NotFound";
 
 // Create a client
@@ -33,6 +34,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/HIW" element={<HIW />} />
+              <Route path="/compare" element={<Compare />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

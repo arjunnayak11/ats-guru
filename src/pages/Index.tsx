@@ -6,7 +6,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const [showResults, setShowResults] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("home");
   const navigate = useNavigate();
 
@@ -148,35 +147,39 @@ const Index = () => {
         <div className="container py-20 md:py-32">
           <div className="text-center space-y-8 animate-fade-up">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-2 animate-pulse">
-              Smart Resume Analysis
+              Smart Resume Analysis & Job Matching
             </div>
             <h1 className="text-4xl md:text-7xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-blue-600 bg-clip-text text-transparent animate-scale-in">
-              Optimize Your Resume for ATS
+              Optimize Your Resume for ATS & Job Matches
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-up" style={{ animationDelay: "200ms" }}>
-              Don't let your perfect resume get lost in the ATS void. Get instant feedback and improve your chances of landing that dream job.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-up">
+              Don't let your perfect resume get lost. Match your resume to job descriptions and get instant feedback to land your dream job.
             </p>
-            <div className="flex justify-center gap-4 animate-fade-up" style={{ animationDelay: "400ms" }}>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-up">
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
                 onClick={() => navigate('/upload')}
               >
-                Start Scanning <ArrowRight className="ml-2" />
+                Start ATS Scan <ArrowRight className="ml-2" />
               </Button>
-              <Button size="lg" variant="outline">
-                Learn More
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/compare')}
+              >
+                Match to Job Description <Target className="ml-2" />
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Features Grid with Hover Effects */}
+      {/* Features Section */}
       <div className="container py-24">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold">Powerful Features</h2>
-          <p className="text-muted-foreground">Everything you need to optimize your resume</p>
+          <p className="text-muted-foreground">Everything you need to land your dream job</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {features.map((feature, index) => (
@@ -195,6 +198,70 @@ const Index = () => {
               </div>
             </Card>
           ))}
+        </div>
+
+        {/* New Job Match Section */}
+        <div className="py-16 border-t">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold">Match Your Resume to Job Descriptions</h2>
+              <p className="text-muted-foreground">
+                Our advanced AI technology analyzes your resume against specific job descriptions to:
+              </p>
+              <ul className="space-y-4">
+                <li className="flex items-center gap-3">
+                  <CheckCircle className="text-green-500" />
+                  <span>Identify matching and missing keywords</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircle className="text-green-500" />
+                  <span>Calculate match percentage</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <CheckCircle className="text-green-500" />
+                  <span>Suggest improvements for better matching</span>
+                </li>
+              </ul>
+              <Button 
+                onClick={() => navigate('/compare')}
+                className="bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+              >
+                Try Job Matching <ArrowRight className="ml-2" />
+              </Button>
+            </div>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-600/20 rounded-3xl transform rotate-3"></div>
+              <Card className="relative p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Target className="text-primary" />
+                  <h3 className="font-semibold">Job Match Analysis</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Overall Match</span>
+                    <span className="text-primary">85%</span>
+                  </div>
+                  <div className="h-2 bg-primary/20 rounded-full">
+                    <div className="h-full w-[85%] bg-primary rounded-full"></div>
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Technical Skills Match: 90%</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Experience Match: 85%</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Education Match: 100%</span>
+                  </li>
+                </ul>
+              </Card>
+            </div>
+          </div>
         </div>
 
         {/* Statistics Section */}
