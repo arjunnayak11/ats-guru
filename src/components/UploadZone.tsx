@@ -27,14 +27,16 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
       setFile(file);
       toast({
         title: "File uploaded successfully",
-        description: "Your resume is ready for ATS scanning.",
+        description: "Your resume is ready for scanning.",
       });
+      return true;
     } else {
       toast({
         title: "Invalid file format",
         description: "Please upload a PDF file.",
         variant: "destructive",
       });
+      return false;
     }
   };
 
@@ -42,34 +44,20 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
-    validateAndSetFile(droppedFile);
-  }, [toast]);
+    if (validateAndSetFile(droppedFile)) {
+      onScanStart(droppedFile);
+    }
+  }, [onScanStart, toast]);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      validateAndSetFile(selectedFile);
+    if (selectedFile && validateAndSetFile(selectedFile)) {
+      onScanStart(selectedFile);
     }
   };
 
   const handleBrowseClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleScan = async () => {
-    if (!file) return;
-    
-    setIsLoading(true);
-    try {
-      onScanStart(file);
-    } catch (error) {
-      toast({
-        title: "Error scanning resume",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    }
-    setIsLoading(false);
   };
 
   return (
@@ -106,7 +94,7 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
               >
                 browse from your computer
               </Button>
-            </div>
+            </p>
           </>
         ) : (
           <div className="space-y-4 w-full">
@@ -115,25 +103,11 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
               <div className="text-left flex-1">
                 <p className="font-medium">{file.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  Ready for ATS analysis
+                  Ready for scanning
                 </p>
               </div>
               <CheckCircle className="w-5 h-5 text-green-500" />
             </div>
-            <Button
-              className="w-full"
-              onClick={handleScan}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Scanning...
-                </>
-              ) : (
-                "Start ATS Scan"
-              )}
-            </Button>
           </div>
         )}
       </div>

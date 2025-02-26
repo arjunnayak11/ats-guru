@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
 
@@ -8,19 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-function cleanPDFText(text: string): string {
-  // Remove PDF specific markers and clean up the text
-  return text
-    .replace(/%PDF-.*?(?=\w)/gs, '') // Remove PDF header
-    .replace(/endobj|endstream|obj|\d+ \d+ obj|stream/g, '') // Remove PDF objects
-    .replace(/\[\d+ \d+ \d+ \d+\]/g, '') // Remove PDF coordinates
-    .replace(/<<.*?>>/g, '') // Remove PDF dictionaries
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .trim();
-}
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -29,14 +18,9 @@ serve(async (req) => {
     const { resumeText, jobDescription } = await req.json()
     
     console.log('Processing resume text and job description...');
-    
-    // Clean the resume text if it contains PDF markers
-    const cleanedResumeText = resumeText.startsWith('%PDF') ? 
-      cleanPDFText(resumeText) : 
-      resumeText;
 
     // Validate input
-    if (!cleanedResumeText || !jobDescription) {
+    if (!resumeText || !jobDescription) {
       throw new Error('Missing required input: resume text or job description');
     }
 
@@ -56,26 +40,25 @@ serve(async (req) => {
           },
           { 
             role: 'user', 
-            content: `Compare this resume with the job description and provide:
-              1. An overall match percentage
-              2. Matching scores for skills, experience, and education
-              3. Missing skills or qualifications
-              4. Specific suggestions for improvement
+            content: `Analyze the resume content and job description below and provide:
+              1. Calculate match percentages for different aspects
+              2. Identify missing skills
+              3. Provide actionable suggestions for improvement
 
-              Resume:
-              ${cleanedResumeText}
+              Resume Content:
+              ${resumeText}
 
               Job Description:
               ${jobDescription}
 
-              Format the response as JSON with the following structure:
+              Respond with a JSON object in this exact format:
               {
-                "overallMatch": number,
-                "skillsMatch": number,
-                "experienceMatch": number,
-                "educationMatch": number,
-                "missingSkills": string[],
-                "suggestions": string[]
+                "overallMatch": <number between 0-100>,
+                "skillsMatch": <number between 0-100>,
+                "experienceMatch": <number between 0-100>,
+                "educationMatch": <number between 0-100>,
+                "missingSkills": [<array of strings>],
+                "suggestions": [<array of strings>]
               }`
           }
         ],
@@ -88,16 +71,26 @@ serve(async (req) => {
       throw new Error('OpenAI API request failed');
     }
 
-    const data = await response.json()
+    const data = await response.json();
     console.log('Successfully received OpenAI response');
     
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response format from OpenAI');
+    }
+
     const parsedContent = JSON.parse(data.choices[0].message.content);
+    
+    // Validate the response format
+    if (!parsedContent.overallMatch || !Array.isArray(parsedContent.missingSkills)) {
+      throw new Error('Invalid response format from OpenAI');
+    }
+
     return new Response(
       JSON.stringify(parsedContent),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error in analyze-resume function:', error)
+    console.error('Error in analyze-resume function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
