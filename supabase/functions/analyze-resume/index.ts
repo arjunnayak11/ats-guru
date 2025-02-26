@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
+const HUGGING_FACE_TOKEN = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,7 +22,6 @@ serve(async (req) => {
       jobDescriptionLength: jobDescription?.length
     });
 
-    // Validate input
     if (!resumeText || !jobDescription) {
       console.error('Missing required input');
       return new Response(
@@ -34,10 +33,10 @@ serve(async (req) => {
       );
     }
 
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
+    if (!HUGGING_FACE_TOKEN) {
+      console.error('Hugging Face token not configured');
       return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        JSON.stringify({ error: 'Hugging Face token not configured' }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -45,96 +44,85 @@ serve(async (req) => {
       );
     }
 
-    console.log('Making request to OpenAI...');
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are an expert ATS and resume analyst. Your task is to analyze resumes against job descriptions and provide match percentages and suggestions. Always respond with valid JSON.'
-          },
-          { 
-            role: 'user', 
-            content: `Analyze this resume against the job description and provide a match analysis.
-              
-              Resume:
-              ${resumeText.substring(0, 8000)} // Limit text length to avoid token limits
-
-              Job Description:
-              ${jobDescription.substring(0, 4000)}
-
-              Provide your analysis in this exact JSON format:
-              {
-                "overallMatch": <number 0-100>,
-                "skillsMatch": <number 0-100>,
-                "experienceMatch": <number 0-100>,
-                "educationMatch": <number 0-100>,
-                "missingSkills": ["skill1", "skill2", ...],
-                "suggestions": ["suggestion1", "suggestion2", ...]
-              }`
+    // Extract skills from job description using zero-shot classification
+    console.log('Extracting skills from job description...');
+    const skillsResponse = await fetch(
+      "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
+      {
+        headers: { 
+          Authorization: `Bearer ${HUGGING_FACE_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({
+          inputs: jobDescription,
+          parameters: {
+            candidate_labels: ["technical skills", "soft skills", "education", "experience"]
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      }),
-    });
-
-    if (!openAIResponse.ok) {
-      const errorData = await openAIResponse.json();
-      console.error('OpenAI API error:', errorData);
-      return new Response(
-        JSON.stringify({ error: 'Failed to process the documents' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    const data = await openAIResponse.json();
-    console.log('Received OpenAI response');
-
-    if (!data.choices?.[0]?.message?.content) {
-      console.error('Invalid OpenAI response format:', data);
-      return new Response(
-        JSON.stringify({ error: 'Invalid response from analysis service' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    try {
-      const parsedContent = JSON.parse(data.choices[0].message.content);
-      
-      // Validate the response format
-      if (typeof parsedContent.overallMatch !== 'number' || 
-          !Array.isArray(parsedContent.missingSkills) || 
-          !Array.isArray(parsedContent.suggestions)) {
-        throw new Error('Invalid response format');
+        }),
       }
+    );
 
-      return new Response(
-        JSON.stringify(parsedContent),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (error) {
-      console.error('Error parsing OpenAI response:', error);
-      return new Response(
-        JSON.stringify({ error: 'Failed to parse analysis results' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    if (!skillsResponse.ok) {
+      console.error('Hugging Face API error:', await skillsResponse.text());
+      throw new Error('Failed to analyze skills');
     }
+
+    const skillsData = await skillsResponse.json();
+    
+    // Calculate similarity scores using sentence-transformers
+    console.log('Calculating similarity scores...');
+    const similarityResponse = await fetch(
+      "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
+      {
+        headers: { 
+          Authorization: `Bearer ${HUGGING_FACE_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        method: "POST",
+        body: JSON.stringify({
+          inputs: {
+            source_sentence: resumeText,
+            sentences: [
+              jobDescription
+            ]
+          }
+        }),
+      }
+    );
+
+    if (!similarityResponse.ok) {
+      console.error('Hugging Face API error:', await similarityResponse.text());
+      throw new Error('Failed to calculate similarity');
+    }
+
+    const similarityScores = await similarityResponse.json();
+    const overallMatch = Math.round(similarityScores[0] * 100);
+
+    // Calculate specific match scores based on classification confidence
+    const scores = skillsData.scores.map(score => Math.round(score * 100));
+    
+    // Structure the response
+    const analysisResult = {
+      overallMatch,
+      skillsMatch: scores[0], // technical skills confidence
+      experienceMatch: scores[3], // experience confidence
+      educationMatch: scores[2], // education confidence
+      missingSkills: [],
+      suggestions: [
+        "Consider adding more specific technical skills mentioned in the job description",
+        "Quantify your achievements with metrics where possible",
+        "Highlight relevant experience that matches the job requirements",
+        "Ensure your education section clearly states your qualifications"
+      ]
+    };
+
+    console.log('Analysis completed successfully');
+    return new Response(
+      JSON.stringify(analysisResult),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
   } catch (error) {
     console.error('Error in analyze-resume function:', error);
     return new Response(
