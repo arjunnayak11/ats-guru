@@ -3,24 +3,41 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, AlertCircle } from "lucide-react";
 
-const ScanResults = () => {
-  const mockResults = {
-    score: 85,
-    improvements: [
-      { type: "success", text: "Professional summary is well-structured" },
-      { type: "warning", text: "Add more industry-specific keywords" },
-      { type: "warning", text: "Quantify your achievements with metrics" },
-    ],
+interface ScanResultsProps {
+  analysisData?: {
+    overallMatch: number;
+    skillsMatch: number;
+    experienceMatch: number;
+    educationMatch: number;
+    missingSkills: string[];
+    suggestions: string[];
   };
+}
+
+const ScanResults = ({ analysisData }: ScanResultsProps) => {
+  if (!analysisData) {
+    return null;
+  }
+
+  const improvements = [
+    ...analysisData.suggestions.map(suggestion => ({
+      type: "warning" as const,
+      text: suggestion
+    })),
+    {
+      type: "success" as const,
+      text: "Resume successfully analyzed"
+    }
+  ];
 
   return (
     <div className="space-y-6 animate-fade-up">
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">ATS Compatibility Score</h3>
         <div className="space-y-4">
-          <Progress value={mockResults.score} className="h-2" />
+          <Progress value={analysisData.overallMatch} className="h-2" />
           <p className="text-sm text-muted-foreground text-center">
-            Your resume is {mockResults.score}% ATS-friendly
+            Your resume is {analysisData.overallMatch}% ATS-friendly
           </p>
         </div>
       </Card>
@@ -28,7 +45,7 @@ const ScanResults = () => {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Suggested Improvements</h3>
         <div className="space-y-4">
-          {mockResults.improvements.map((item, index) => (
+          {improvements.map((item, index) => (
             <div
               key={index}
               className="flex items-start space-x-3 p-3 rounded-lg bg-muted/50"
