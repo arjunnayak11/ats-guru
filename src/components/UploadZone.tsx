@@ -2,13 +2,12 @@
 import { useState, useCallback, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,7 +93,7 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
               >
                 browse from your computer
               </Button>
-            </p>
+            </div>
           </>
         ) : (
           <div className="space-y-4 w-full">
