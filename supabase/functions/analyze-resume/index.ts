@@ -17,15 +17,36 @@ serve(async (req) => {
   try {
     const { resumeText, jobDescription } = await req.json()
     
-    console.log('Processing resume text and job description...');
+    console.log('Processing request with input lengths:', {
+      resumeLength: resumeText?.length,
+      jobDescriptionLength: jobDescription?.length
+    });
 
     // Validate input
     if (!resumeText || !jobDescription) {
-      throw new Error('Missing required input: resume text or job description');
+      console.error('Missing required input');
+      return new Response(
+        JSON.stringify({ error: 'Missing required input: resume text or job description' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     console.log('Making request to OpenAI...');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -36,67 +57,92 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert ATS and resume analyst. Analyze resumes and job descriptions to provide detailed matching scores and suggestions.'
+            content: 'You are an expert ATS and resume analyst. Your task is to analyze resumes against job descriptions and provide match percentages and suggestions. Always respond with valid JSON.'
           },
           { 
             role: 'user', 
-            content: `Analyze the resume content and job description below and provide:
-              1. Calculate match percentages for different aspects
-              2. Identify missing skills
-              3. Provide actionable suggestions for improvement
-
-              Resume Content:
-              ${resumeText}
+            content: `Analyze this resume against the job description and provide a match analysis.
+              
+              Resume:
+              ${resumeText.substring(0, 8000)} // Limit text length to avoid token limits
 
               Job Description:
-              ${jobDescription}
+              ${jobDescription.substring(0, 4000)}
 
-              Respond with a JSON object in this exact format:
+              Provide your analysis in this exact JSON format:
               {
-                "overallMatch": <number between 0-100>,
-                "skillsMatch": <number between 0-100>,
-                "experienceMatch": <number between 0-100>,
-                "educationMatch": <number between 0-100>,
-                "missingSkills": [<array of strings>],
-                "suggestions": [<array of strings>]
+                "overallMatch": <number 0-100>,
+                "skillsMatch": <number 0-100>,
+                "experienceMatch": <number 0-100>,
+                "educationMatch": <number 0-100>,
+                "missingSkills": ["skill1", "skill2", ...],
+                "suggestions": ["suggestion1", "suggestion2", ...]
               }`
           }
         ],
+        temperature: 0.7,
+        max_tokens: 1000
       }),
-    })
+    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.json();
       console.error('OpenAI API error:', errorData);
-      throw new Error('OpenAI API request failed');
+      return new Response(
+        JSON.stringify({ error: 'Failed to process the documents' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    const data = await response.json();
-    console.log('Successfully received OpenAI response');
-    
+    const data = await openAIResponse.json();
+    console.log('Received OpenAI response');
+
     if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response format from OpenAI');
+      console.error('Invalid OpenAI response format:', data);
+      return new Response(
+        JSON.stringify({ error: 'Invalid response from analysis service' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    const parsedContent = JSON.parse(data.choices[0].message.content);
-    
-    // Validate the response format
-    if (!parsedContent.overallMatch || !Array.isArray(parsedContent.missingSkills)) {
-      throw new Error('Invalid response format from OpenAI');
-    }
+    try {
+      const parsedContent = JSON.parse(data.choices[0].message.content);
+      
+      // Validate the response format
+      if (typeof parsedContent.overallMatch !== 'number' || 
+          !Array.isArray(parsedContent.missingSkills) || 
+          !Array.isArray(parsedContent.suggestions)) {
+        throw new Error('Invalid response format');
+      }
 
-    return new Response(
-      JSON.stringify(parsedContent),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      return new Response(
+        JSON.stringify(parsedContent),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (error) {
+      console.error('Error parsing OpenAI response:', error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse analysis results' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
   } catch (error) {
     console.error('Error in analyze-resume function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'An unexpected error occurred' }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
-})
+});
