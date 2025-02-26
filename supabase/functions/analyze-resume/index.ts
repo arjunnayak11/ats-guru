@@ -9,6 +9,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to extract keywords using zero-shot classification
+async function extractKeywords(text: string, category: string) {
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
+    {
+      headers: { 
+        Authorization: `Bearer ${HUGGING_FACE_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      method: "POST",
+      body: JSON.stringify({
+        inputs: text,
+        parameters: {
+          candidate_labels: [
+            "programming languages",
+            "frameworks",
+            "tools",
+            "soft skills",
+            "technical skills",
+            "certifications",
+            "industry knowledge"
+          ]
+        }
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to extract ${category} keywords`);
+  }
+
+  return response.json();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -44,32 +78,13 @@ serve(async (req) => {
       );
     }
 
-    // Extract skills from job description using zero-shot classification
-    console.log('Extracting skills from job description...');
-    const skillsResponse = await fetch(
-      "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
-      {
-        headers: { 
-          Authorization: `Bearer ${HUGGING_FACE_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        method: "POST",
-        body: JSON.stringify({
-          inputs: jobDescription,
-          parameters: {
-            candidate_labels: ["technical skills", "soft skills", "education", "experience"]
-          }
-        }),
-      }
-    );
+    // Extract keywords from both documents
+    console.log('Extracting keywords from both documents...');
+    const [jobKeywords, resumeKeywords] = await Promise.all([
+      extractKeywords(jobDescription, 'job'),
+      extractKeywords(resumeText, 'resume')
+    ]);
 
-    if (!skillsResponse.ok) {
-      console.error('Hugging Face API error:', await skillsResponse.text());
-      throw new Error('Failed to analyze skills');
-    }
-
-    const skillsData = await skillsResponse.json();
-    
     // Calculate similarity scores using sentence-transformers
     console.log('Calculating similarity scores...');
     const similarityResponse = await fetch(
@@ -83,9 +98,7 @@ serve(async (req) => {
         body: JSON.stringify({
           inputs: {
             source_sentence: resumeText,
-            sentences: [
-              jobDescription
-            ]
+            sentences: [jobDescription]
           }
         }),
       }
@@ -99,22 +112,43 @@ serve(async (req) => {
     const similarityScores = await similarityResponse.json();
     const overallMatch = Math.round(similarityScores[0] * 100);
 
-    // Calculate specific match scores based on classification confidence
-    const scores = skillsData.scores.map(score => Math.round(score * 100));
-    
+    // Find missing skills by comparing job and resume scores
+    const missingSkills = [];
+    jobKeywords.scores.forEach((score, index) => {
+      if (score > 0.6 && resumeKeywords.scores[index] < 0.4) {
+        missingSkills.push(jobKeywords.labels[index]);
+      }
+    });
+
+    // Calculate specific match percentages
+    const skillsMatch = Math.round(
+      (resumeKeywords.scores[2] + resumeKeywords.scores[4]) * 50
+    );
+    const experienceMatch = Math.round(resumeKeywords.scores[6] * 100);
+    const educationMatch = Math.round(
+      (resumeKeywords.scores[5] + resumeKeywords.scores[2]) * 50
+    );
+
+    // Generate suggestions based on analysis
+    const suggestions = [
+      "Consider adding more specific technical skills mentioned in the job description",
+      "Quantify your achievements with metrics where possible",
+      "Highlight relevant experience that matches the job requirements",
+      "Ensure your education section clearly states your qualifications"
+    ];
+
+    if (missingSkills.length > 0) {
+      suggestions.unshift(`Add missing keywords related to: ${missingSkills.join(', ')}`);
+    }
+
     // Structure the response
     const analysisResult = {
       overallMatch,
-      skillsMatch: scores[0], // technical skills confidence
-      experienceMatch: scores[3], // experience confidence
-      educationMatch: scores[2], // education confidence
-      missingSkills: [],
-      suggestions: [
-        "Consider adding more specific technical skills mentioned in the job description",
-        "Quantify your achievements with metrics where possible",
-        "Highlight relevant experience that matches the job requirements",
-        "Ensure your education section clearly states your qualifications"
-      ]
+      skillsMatch,
+      experienceMatch,
+      educationMatch,
+      missingSkills,
+      suggestions
     };
 
     console.log('Analysis completed successfully');
