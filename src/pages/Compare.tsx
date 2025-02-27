@@ -26,7 +26,7 @@ const Compare = () => {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [resumeText, setResumeText] = useState<string>("");
 
-  const handleScanStart = async (file: File) => {
+  const handleFileSelect = async (file: File) => {
     try {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -104,7 +104,7 @@ const Compare = () => {
         <div className="grid gap-8">
           <div>
             <h2 className="text-xl font-semibold mb-4">1. Upload Your Resume</h2>
-            <UploadZone onScanStart={handleScanStart} />
+            <UploadZone onFileSelect={handleFileSelect} />
           </div>
 
           <div>
