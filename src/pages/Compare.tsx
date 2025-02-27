@@ -84,7 +84,7 @@ const Compare = () => {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container px-4 md:px-6 py-8">
       <Button 
         variant="ghost" 
         onClick={() => navigate(-1)}
@@ -95,23 +95,23 @@ const Compare = () => {
 
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">Match Your Resume to Job Description</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-4xl font-bold">Match Your Resume to Job Description</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Upload your resume and paste the job description to see how well they match
           </p>
         </div>
 
-        <div className="grid gap-8">
+        <div className="grid gap-6 md:gap-8">
           <div>
-            <h2 className="text-xl font-semibold mb-4">1. Upload Your Resume</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-4">1. Upload Your Resume</h2>
             <UploadZone onFileSelect={handleFileSelect} />
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-4">2. Paste Job Description</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-4">2. Paste Job Description</h2>
             <Textarea 
               placeholder="Paste the job description here..."
-              className="min-h-[200px]"
+              className="min-h-[150px] md:min-h-[200px]"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
             />

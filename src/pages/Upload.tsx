@@ -84,7 +84,7 @@ const Upload = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-      <div className="container py-16">
+      <div className="container px-4 md:px-6 py-8 md:py-16">
         <Button 
           variant="ghost" 
           onClick={() => navigate(-1)}
@@ -93,13 +93,14 @@ const Upload = () => {
           ← Back
         </Button>
         
-        <div className="max-w-2xl mx-auto space-y-12">
+        <div className="max-w-2xl mx-auto space-y-8 md:space-y-12">
           <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold">Upload Your Resume</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold">Upload Your Resume</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Let our AI-powered ATS scanner analyze your resume
             </p>
           </div>
+          
           <UploadZone onFileSelect={handleFileUpload} />
           
           <div className="flex justify-center">
@@ -110,7 +111,7 @@ const Upload = () => {
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing...
                 </>
               ) : (

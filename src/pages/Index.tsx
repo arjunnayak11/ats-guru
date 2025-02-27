@@ -79,9 +79,9 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       {/* Navigation Header */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container flex items-center justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+        <div className="container flex items-center justify-between h-16 px-4 md:px-6">
+          <div className="flex items-center space-x-4 md:space-x-8">
+            <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               ATS Guru
             </span>
             {/* Desktop Navigation */}
@@ -107,7 +107,7 @@ const Index = () => {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px]">
+              <SheetContent side="right" className="w-full sm:w-[300px]">
                 <div className="flex flex-col space-y-4 mt-8">
                   {navigationItems.map((item) => (
                     <Button
@@ -144,15 +144,15 @@ const Index = () => {
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/5 via-purple-500/5 to-transparent border-b">
-        <div className="container py-20 md:py-32">
-          <div className="text-center space-y-8 animate-fade-up">
+        <div className="container px-4 md:px-6 py-12 md:py-20 lg:py-32">
+          <div className="text-center space-y-6 md:space-y-8 animate-fade-up">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-2 animate-pulse">
               Smart Resume Analysis & Job Matching
             </div>
-            <h1 className="text-4xl md:text-7xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-blue-600 bg-clip-text text-transparent animate-scale-in">
+            <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight bg-gradient-to-r from-primary via-purple-600 to-blue-600 bg-clip-text text-transparent animate-scale-in">
               Optimize Your Resume for ATS & Job Matches
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-up">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-up">
               Don't let your perfect resume get lost. Match your resume to job descriptions and get instant feedback to land your dream job.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-up">
@@ -176,12 +176,12 @@ const Index = () => {
       </div>
 
       {/* Features Section */}
-      <div className="container py-24">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-3xl md:text-4xl font-bold">Powerful Features</h2>
+      <div className="container px-4 md:px-6 py-16 md:py-24">
+        <div className="text-center mb-12 md:mb-16 space-y-4">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">Powerful Features</h2>
           <p className="text-muted-foreground">Everything you need to land your dream job</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {features.map((feature, index) => (
             <Card 
               key={index} 
