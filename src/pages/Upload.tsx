@@ -6,14 +6,37 @@ import UploadZone from "@/components/UploadZone";
 import ScanResults from "@/components/ScanResults";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const Upload = () => {
   const [showResults, setShowResults] = useState(false);
   const [analysisData, setAnalysisData] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleScanStart = async (file: File) => {
+  const handleFileUpload = (file: File) => {
+    setUploadedFile(file);
+    setShowResults(false);
+  };
+
+  const handleScanStart = async () => {
+    if (!uploadedFile) {
+      toast({
+        title: "No file selected",
+        description: "Please upload a resume first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    toast({
+      title: "Processing resume",
+      description: "Please wait while we analyze your resume...",
+    });
+
     try {
       // Convert PDF to text
       const reader = new FileReader();
@@ -40,9 +63,13 @@ const Upload = () => {
 
         setAnalysisData(data);
         setShowResults(true);
+        toast({
+          title: "Analysis complete",
+          description: "Your resume has been successfully analyzed.",
+        });
       };
 
-      reader.readAsText(file);
+      reader.readAsText(uploadedFile);
     } catch (error) {
       console.error('Error analyzing resume:', error);
       toast({
@@ -50,6 +77,8 @@ const Upload = () => {
         description: "An error occurred while analyzing your resume. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -71,8 +100,25 @@ const Upload = () => {
               Let our AI-powered ATS scanner analyze your resume
             </p>
           </div>
-          <UploadZone onScanStart={handleScanStart} />
+          <UploadZone onFileSelect={handleFileUpload} />
           
+          <div className="flex justify-center">
+            <Button
+              onClick={handleScanStart}
+              disabled={!uploadedFile || isProcessing}
+              className="w-full max-w-xs"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Analyze Resume'
+              )}
+            </Button>
+          </div>
+
           {showResults && (
             <div className="animate-fade-up">
               <ScanResults analysisData={analysisData} />

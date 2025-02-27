@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
+const UploadZone = ({ onFileSelect }: { onFileSelect: (file: File) => void }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -24,6 +24,7 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
   const validateAndSetFile = (file: File) => {
     if (file && file.type === "application/pdf") {
       setFile(file);
+      onFileSelect(file);
       toast({
         title: "File uploaded successfully",
         description: "Your resume is ready for scanning.",
@@ -43,15 +44,13 @@ const UploadZone = ({ onScanStart }: { onScanStart: (file: File) => void }) => {
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (validateAndSetFile(droppedFile)) {
-      onScanStart(droppedFile);
-    }
-  }, [onScanStart, toast]);
+    validateAndSetFile(droppedFile);
+  }, [onFileSelect]);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile && validateAndSetFile(selectedFile)) {
-      onScanStart(selectedFile);
+    if (selectedFile) {
+      validateAndSetFile(selectedFile);
     }
   };
 
