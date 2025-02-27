@@ -9,6 +9,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to normalize score to percentage
+function normalizeScore(score: number): number {
+  // Convert similarity score (typically between -1 and 1) to percentage (0-100)
+  return Math.min(Math.max(Math.round((score + 1) * 50), 0), 100);
+}
+
 // Helper function to extract keywords using zero-shot classification
 async function extractKeywords(text: string, category: string) {
   const response = await fetch(
@@ -110,7 +116,7 @@ serve(async (req) => {
     }
 
     const similarityScores = await similarityResponse.json();
-    const overallMatch = Math.round(similarityScores[0] * 100);
+    const overallMatch = normalizeScore(similarityScores[0]);
 
     // Find missing skills by comparing job and resume scores
     const missingSkills = [];
@@ -120,13 +126,13 @@ serve(async (req) => {
       }
     });
 
-    // Calculate specific match percentages
-    const skillsMatch = Math.round(
-      (resumeKeywords.scores[2] + resumeKeywords.scores[4]) * 50
+    // Calculate specific match percentages with normalization
+    const skillsMatch = normalizeScore(
+      (resumeKeywords.scores[2] + resumeKeywords.scores[4]) / 2
     );
-    const experienceMatch = Math.round(resumeKeywords.scores[6] * 100);
-    const educationMatch = Math.round(
-      (resumeKeywords.scores[5] + resumeKeywords.scores[2]) * 50
+    const experienceMatch = normalizeScore(resumeKeywords.scores[6]);
+    const educationMatch = normalizeScore(
+      (resumeKeywords.scores[5] + resumeKeywords.scores[2]) / 2
     );
 
     // Generate suggestions based on analysis
@@ -151,7 +157,13 @@ serve(async (req) => {
       suggestions
     };
 
-    console.log('Analysis completed successfully');
+    console.log('Analysis completed successfully with scores:', {
+      overallMatch,
+      skillsMatch,
+      experienceMatch,
+      educationMatch
+    });
+    
     return new Response(
       JSON.stringify(analysisResult),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
